@@ -220,6 +220,41 @@ footer {
   font-size: 0.9rem;
 }
 
+.release-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.release-card .release-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.release-card .release-heading h3 {
+  margin: 0;
+}
+
+.release-card .release-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.release-card .release-notes {
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.release-card-latest {
+  border-color: var(--accent);
+  box-shadow: 0 0 25px rgba(90, 209, 255, 0.15);
+}
+
 @media (max-width: 600px) {
   .hero-actions {
     flex-direction: column;

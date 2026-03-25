@@ -24,17 +24,23 @@ cp -R "${SRC_DIR}/assets" "${OUT_DIR}/assets"
 
 ROOT_DIR_ENV="${ROOT_DIR}"
 SMOKEY_VERSION_ENV="${SMOKEY_VERSION}"
-ROOT_DIR="$ROOT_DIR_ENV" SMOKEY_VERSION="$SMOKEY_VERSION_ENV" python3 <<'PY'
+for html in "${SRC_DIR}"/*.html; do
+  file_name="$(basename "${html}")"
+  ROOT_DIR="${ROOT_DIR_ENV}" \
+  SMOKEY_VERSION="${SMOKEY_VERSION_ENV}" \
+  SRC_FILE="${html}" \
+  DST_FILE="${OUT_DIR}/${file_name}" \
+  python3 <<'PY'
 import os
 from pathlib import Path
 
-root = Path(os.environ["ROOT_DIR"])
-src = root / "site-src" / "index.html"
-dst = root / "site" / "index.html"
+src = Path(os.environ["SRC_FILE"])
+dst = Path(os.environ["DST_FILE"])
 version = os.environ["SMOKEY_VERSION"]
-data = src.read_text()
-data = data.replace("{{VERSION}}", version)
-dst.write_text(data)
+text = src.read_text()
+text = text.replace("{{VERSION}}", version)
+dst.write_text(text)
 PY
+done
 
 echo "Built site with Smokey ${SMOKEY_VERSION} -> ${OUT_DIR}"
