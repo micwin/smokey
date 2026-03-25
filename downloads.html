@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smokey Downloads</title>
+    <link rel="stylesheet" href="assets/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <header>
+      <div class="container hero">
+        <div>
+          <p class="tagline">Downloads</p>
+          <h1>Grab any Smokey release.</h1>
+          <p>Every release ships a Debian package and the raw shell script. Pick the version that matches your automation or audit trail.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="index.html">← Back to site</a>
+            <a class="btn btn-ghost" href="https://github.com/micwin/smokey/releases" target="_blank" rel="noopener">View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section>
+      <div class="container">
+        <p class="tagline">Latest stable</p>
+        <div id="latest" class="card"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <p class="tagline">All releases</p>
+        <div id="releases" class="release-list"></div>
+        <div id="releases-empty" class="card" style="display:none;">No releases detected yet. Check back soon.</div>
+      </div>
+    </section>
+
+    <footer>
+      Smokey · MIT Licensed · Crafted for boring predictable smoke tests.
+    </footer>
+
+    <script>
+      const RELEASE_ENDPOINT = 'https://api.github.com/repos/micwin/smokey/releases?per_page=20';
+      const latestContainer = document.getElementById('latest');
+      const releasesContainer = document.getElementById('releases');
+      const emptyState = document.getElementById('releases-empty');
+
+      function formatRelease(release) {
+        const version = release.tag_name;
+        const date = new Date(release.published_at).toLocaleDateString();
+        const deb = release.assets.find((a) => a.name.endsWith('_amd64.deb'));
+        const script = release.assets.find((a) => /smokey_\d+\.\d+\.\d+$/.test(a.name));
+        return { version, date, deb, script, url: release.html_url };
+      }
+
+      function buildCard(info, highlight=false) {
+        const card = document.createElement('article');
+        card.className = 'card release-card';
+        card.innerHTML = `
+          <div class="release-heading">
+            <h3>${info.version}</h3>
+            <span>${info.date}</span>
+          </div>
+          <div class="release-links">
+            ${info.deb ? `<a class="btn btn-primary" href="${info.deb.browser_download_url}">Download .deb</a>` : ''}
+            ${info.script ? `<a class="btn btn-ghost" href="${info.script.browser_download_url}">Download script</a>` : ''}
+            <a class="release-notes" href="${info.url}" target="_blank" rel="noopener">Release notes →</a>
+          </div>`;
+        if (highlight) {
+          card.classList.add('release-card-latest');
+        }
+        return card;
+      }
+
+      fetch(RELEASE_ENDPOINT)
+        .then((res) => res.json())
+        .then((releases) => {
+          if (!Array.isArray(releases) || releases.length === 0) {
+            emptyState.style.display = 'block';
+            return;
+          }
+          const formatted = releases.map(formatRelease);
+          latestContainer.appendChild(buildCard(formatted[0], true));
+          formatted.forEach((info) => {
+            releasesContainer.appendChild(buildCard(info));
+          });
+        })
+        .catch(() => {
+          emptyState.style.display = 'block';
+          emptyState.textContent = 'Unable to load releases from GitHub right now.';
+        });
+    </script>
+  </body>
+</html>
