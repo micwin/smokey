@@ -69,3 +69,12 @@ Run it via:
 cd vaultline
 ../smokey/smokey.sh --tests-dir tests.d
 ```
+
+## Website & releases
+- Edit the marketing site under `site-src/` (placeholders such as `{{VERSION}}` are replaced automatically), then run `./build-site.sh` to regenerate the static assets in `site/`.
+- `./package-deb.sh` bumps `SMOKEY_VERSION`, rebuilds the site, and creates `dist/smokey_<version>_amd64.deb`.
+- Pushing the `release` branch triggers the automated GitHub Actions workflow:
+  1. determine the version from `smokey.sh`
+  2. run `package-deb.sh` and package the `.deb`
+  3. tag the commit (`v<version>`) and publish a GitHub Release with the Debian package
+  4. deploy the generated site (`site/`) to the `pages` branch
