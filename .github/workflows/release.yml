@@ -50,7 +50,9 @@ jobs:
         with:
           tag_name: v${{ steps.vars.outputs.version }}
           name: Smokey v${{ steps.vars.outputs.version }}
-          files: dist/smokey_${{ steps.vars.outputs.version }}_amd64.deb
+          files: |
+            dist/smokey_${{ steps.vars.outputs.version }}_amd64.deb
+            dist/smokey_${{ steps.vars.outputs.version }}.sh
           draft: false
           prerelease: false
 

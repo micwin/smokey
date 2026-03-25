@@ -78,3 +78,4 @@ cd vaultline
   2. run `package-deb.sh` and package the `.deb`
   3. tag the commit (`v<version>`) and publish a GitHub Release with the Debian package
   4. deploy the generated site (`site/`) to the `pages` branch
+- Releases also attach a standalone `smokey_<version>.sh` script so users can download and run the CLI without the `.deb` package.

@@ -57,4 +57,8 @@ chmod 644 usr/share/doc/smokey/README
 cd "${DIST_DIR}"
 dpkg-deb --build "smokey-deb" "smokey_${NEW_VERSION}_${ARCH}.deb"
 
-echo "Built smokey ${NEW_VERSION}"EOF
+SCRIPT_ASSET="smokey_${NEW_VERSION}.sh"
+cp "${ROOT_DIR}/smokey.sh" "${DIST_DIR}/${SCRIPT_ASSET}"
+chmod +x "${DIST_DIR}/${SCRIPT_ASSET}"
+
+echo "Built smokey ${NEW_VERSION}"
