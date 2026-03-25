@@ -1,13 +1,13 @@
 :root {
-  --bg: #0b0d17;
-  --bg-alt: #111421;
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --primary: #8ff0a4;
-  --accent: #5ad1ff;
-  --muted: #9da8c3;
-  --text: #f7f8ff;
-  --border: rgba(255, 255, 255, 0.08);
-  --code-bg: #161b2b;
+  --bg: #1b1918;
+  --bg-alt: #24201f;
+  --card-bg: rgba(34, 30, 28, 0.85);
+  --primary: #ff9250;
+  --accent: #ffc062;
+  --muted: #c7b8ad;
+  --text: #f5f0ea;
+  --border: rgba(255, 237, 221, 0.15);
+  --code-bg: #221c1a;
   font-size: 16px;
 }
 
@@ -20,7 +20,9 @@
 body {
   margin: 0;
   font-family: "Inter", "Segoe UI", Roboto, sans-serif;
-  background: radial-gradient(circle at top, #111831 0%, #05060b 60%);
+  background: radial-gradient(circle at 20% 20%, rgba(255, 140, 60, 0.25), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(255, 186, 115, 0.25), transparent 45%),
+    linear-gradient(135deg, #201c1b 0%, #0f0d0c 100%);
   color: var(--text);
   min-height: 100vh;
   line-height: 1.6;
@@ -80,14 +82,15 @@ header {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  color: #020205;
-  box-shadow: 0 10px 25px rgba(92, 225, 230, 0.25);
+  background: linear-gradient(120deg, var(--primary), var(--accent));
+  color: #1d120d;
+  box-shadow: 0 10px 30px rgba(255, 130, 60, 0.35);
 }
 
 .btn-ghost {
   border-color: var(--border);
   color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .btn:hover {
@@ -106,7 +109,7 @@ header {
   padding: 1.5rem;
   border-radius: 1rem;
   border: 1px solid var(--border);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 25px 45px rgba(0, 0, 0, 0.35);
 }
 
 .card h3 {
@@ -150,8 +153,8 @@ section {
   width: 1.2rem;
   height: 1.2rem;
   border-radius: 0.4rem;
-  background: var(--accent);
-  box-shadow: 0 0 12px rgba(90, 209, 255, 0.6);
+  background: linear-gradient(180deg, rgba(255, 186, 115, 1), rgba(255, 125, 70, 1));
+  box-shadow: 0 0 20px rgba(255, 150, 80, 0.65);
 }
 
 .code-block {
@@ -186,7 +189,7 @@ section {
   border-radius: 999px;
   align-items: center;
   justify-content: center;
-  background: rgba(143, 240, 164, 0.15);
+  background: rgba(255, 138, 74, 0.2);
   color: var(--primary);
   font-weight: 600;
   margin-bottom: 0.75rem;
