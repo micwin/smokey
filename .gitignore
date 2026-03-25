@@ -8,3 +8,4 @@ site/
 
 # editor cruft
 .DS_Store
+dist/
