@@ -67,6 +67,10 @@ header {
   margin-top: 1.5rem;
 }
 
+.hero-actions-centered {
+  justify-content: center;
+}
+
 .btn {
   padding: 0.9rem 1.8rem;
   border-radius: 999px;
