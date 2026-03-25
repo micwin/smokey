@@ -16,7 +16,8 @@
           <p class="tagline">CLI · smoke tests · automation</p>
           <h1>Smokey keeps your smoke tests honest.</h1>
           <p>
-            A tiny Bash runner that executes numbered suites, snapshots environment variables, and fails fast when something smells wrong. No YAML, no daemons — just predictable smoke tests that work on any CI runner or developer laptop.
+            A tiny Bash runner that executes numbered suites, snapshots environment variables, and gives you the option to fail fast as soon as something smells wrong.
+            No YAML, no daemons — just boring, predictable smoke tests that work on any CI runner or developer laptop.
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="https://github.com/micwin/smokey" target="_blank" rel="noopener">View on GitHub</a>
@@ -120,11 +121,11 @@ tests: 1/2 · failures:
         <h2 class="section-title">Install once, run everywhere.</h2>
         <div class="card code-block">
 <pre><code># install for current user (latest stable tag)
-curl -fsSL https://raw.githubusercontent.com/micwin/smokey/v0.1.5/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/micwin/smokey/v0.1.6/install.sh | bash
 
 # or install the Debian package from Releases
-curl -LO https://github.com/micwin/smokey/releases/download/v0.1.5/smokey_0.1.5_amd64.deb
-sudo dpkg -i smokey_0.1.5_amd64.deb
+curl -LO https://github.com/micwin/smokey/releases/download/v0.1.6/smokey_0.1.6_amd64.deb
+sudo dpkg -i smokey_0.1.6_amd64.deb
 
 # bootstrap via git
 git clone git@github.com:micwin/smokey.git
@@ -134,8 +135,8 @@ cd smokey && ./smokey
 ../smokey/smokey --tests-dir ./infra/tests.d --fail-fast</code></pre>
         </div>
         <div class="hero-actions" style="margin-top:1rem;">
-          <a class="btn btn-primary" href="https://github.com/micwin/smokey/releases/download/v0.1.5/smokey_0.1.5_amd64.deb">Download Debian package</a>
-          <a class="btn btn-ghost" href="https://github.com/micwin/smokey/releases/download/v0.1.5/smokey_0.1.5">Download smokey</a>
+          <a class="btn btn-primary" href="https://github.com/micwin/smokey/releases/download/v0.1.6/smokey_0.1.6_amd64.deb">Download Debian package</a>
+          <a class="btn btn-ghost" href="https://github.com/micwin/smokey/releases/download/v0.1.6/smokey_0.1.6">Download smokey</a>
         </div>
       </div>
     </section>
