@@ -3,5 +3,8 @@
 tests.d/.smokey-state/
 *.log
 
+# generated marketing site
+site/
+
 # editor cruft
 .DS_Store
