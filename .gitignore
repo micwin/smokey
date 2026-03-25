@@ -1,0 +1,7 @@
+# smokey runtime artifacts
+.smokey-state/
+tests.d/.smokey-state/
+*.log
+
+# editor cruft
+.DS_Store

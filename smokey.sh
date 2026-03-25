@@ -1,0 +1,318 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SMOKEY_VERSION="0.1.0"
+
+print_header() {
+  echo "smokey ${SMOKEY_VERSION}"
+}
+
+usage() {
+  print_header
+  cat <<'USAGE'
+Usage: smokey.sh [OPTIONS] [--tests-dir DIR]
+
+Runs numbered smoke tests located in DIR (default: ./tests.d relative to current working directory).
+Entries can be executable scripts or directories containing exactly one executable file.
+
+Options:
+  --tests-dir DIR   Explicit tests directory (default: ./tests.d)
+  --fail-fast       Abort remaining regular tests after the first failure (teardown still runs)
+  --preserve        Skip teardown entries at the end (keeps artifacts)
+  --reuse-state     Skip the initial teardown pass (reuse existing state)
+  -h, --help        Show this help message
+USAGE
+  if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+    return 2
+  fi
+  exit 2
+}
+
+TESTS_DIR=""
+FAIL_FAST=false
+PRESERVE=false
+REUSE_STATE=false
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --tests-dir|-t)
+      shift
+      [[ $# -gt 0 ]] || usage
+      TESTS_DIR="$1"
+      shift
+      ;;
+    --fail-fast)
+      FAIL_FAST=true
+      shift
+      ;;
+    --preserve|-p)
+      PRESERVE=true
+      shift
+      ;;
+    --reuse-state)
+      REUSE_STATE=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      if [[ -z "${TESTS_DIR}" ]]; then
+        TESTS_DIR="$1"
+        shift
+      else
+        usage
+      fi
+      ;;
+  esac
+done
+
+DEFAULTED=false
+if [[ -z "${TESTS_DIR}" ]]; then
+  TESTS_DIR="tests.d"
+  DEFAULTED=true
+fi
+
+print_header
+
+if [[ ! -d "${TESTS_DIR}" ]]; then
+  ABS_TESTS_DIR="$(cd "$(dirname "${TESTS_DIR}")" 2>/dev/null && pwd)/$(basename "${TESTS_DIR}")"
+  echo "smokey: tests directory not found: ${ABS_TESTS_DIR}" >&2
+  if [[ "${DEFAULTED}" == "true" ]]; then
+    usage
+  fi
+  exit 1
+fi
+
+TEST_ROOT="$(cd "${TESTS_DIR}" && pwd)"
+export SMOKEY_TEST_ROOT="${TEST_ROOT}"
+export SMOKEY_SKIP_CODE=20
+
+STATE_PARENT="${SMOKEY_TEST_ROOT}/.smokey-state"
+mkdir -p "${STATE_PARENT}"
+RUN_ID="$(date +%s%N)_$$_$RANDOM"
+SMOKEY_STATE_DIR="${STATE_PARENT}/${RUN_ID}"
+mkdir -p "${SMOKEY_STATE_DIR}"
+export SMOKEY_STATE_DIR
+export SMOKEY_STATE_PARENT="${STATE_PARENT}"
+
+cleanup_state_dir() {
+  if [[ "${PRESERVE}" == "true" ]]; then
+    return
+  fi
+  if [[ -n "${SMOKEY_STATE_DIR:-}" && -d "${SMOKEY_STATE_DIR}" ]]; then
+    rm -rf "${SMOKEY_STATE_DIR}"
+  fi
+}
+trap cleanup_state_dir EXIT
+
+mapfile -d '' entries < <(find "${SMOKEY_TEST_ROOT}" -mindepth 1 -maxdepth 1 -print0 | LC_ALL=C sort -z)
+filtered_entries=()
+for entry in "${entries[@]}"; do
+  base="$(basename "${entry}")"
+  [[ "${base}" == ".smokey-state" ]] && continue
+  filtered_entries+=("${entry}")
+done
+
+if [[ ${#filtered_entries[@]} -eq 0 ]]; then
+  echo "smokey: no tests in ${SMOKEY_TEST_ROOT}" >&2
+  exit 1
+fi
+
+teardown_entries=()
+regular_entries=()
+for entry in "${filtered_entries[@]}"; do
+  base="$(basename "${entry}")"
+  if [[ "${base}" == 999-* ]]; then
+    teardown_entries+=("${entry}")
+  else
+    regular_entries+=("${entry}")
+  fi
+done
+
+declare -A RESULTS=()
+declare -A TEARDOWN_RESULTS=()
+INITIAL_TEARDOWN_OK=true
+INITIAL_SETUP_OK=true
+REGULAR_OK=0
+REGULAR_TOTAL=${#regular_entries[@]}
+FAIL_COUNT=0
+SKIP_REST=false
+SKIP_REASON=""
+
+prepare_entry() {
+  local entry="$1"
+  ENTRY_NAME="$(basename "${entry}")"
+  ENTRY_IS_SETUP=false
+  ENTRY_IS_TEARDOWN=false
+  [[ "${ENTRY_NAME}" == 000-* ]] && ENTRY_IS_SETUP=true
+  [[ "${ENTRY_NAME}" == 999-* ]] && ENTRY_IS_TEARDOWN=true
+  ENTRY_TARGET="${entry}"
+  ENTRY_TEST_DIR=""
+  if [[ -d "${entry}" ]]; then
+    mapfile -d '' executables < <(find "${entry}" -mindepth 1 -maxdepth 1 -type f -perm -u+x -print0)
+    if [[ ${#executables[@]} -eq 0 ]]; then
+      echo "!! ${entry} has no executable test file"
+      return 1
+    fi
+    if [[ ${#executables[@]} -gt 1 ]]; then
+      echo "!! ${entry} contains multiple executables (expected exactly one)"
+      return 1
+    fi
+    ENTRY_TARGET="${executables[0]}"
+    ENTRY_TEST_DIR="${entry}"
+  fi
+  return 0
+}
+
+run_entry() {
+  local entry="$1"
+  local phase="$2"
+  local skip_reason="$3"
+  local record="${4:-true}"
+
+  prepare_entry "${entry}" || {
+    if [[ "${record}" == "true" ]]; then
+      RESULTS["${entry}"]="invalid_entry"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+    return 1
+  }
+
+  if [[ -n "${skip_reason}" ]]; then
+    if [[ "${record}" == "true" ]]; then
+      RESULTS["${ENTRY_TARGET}"]="skipped_${skip_reason// /_}"
+    fi
+    echo ">> skipping ${ENTRY_TARGET} (${skip_reason})"
+    return 0
+  fi
+
+  if [[ ! -x "${ENTRY_TARGET}" ]]; then
+    echo "skipping ${ENTRY_TARGET} (not executable)"
+    if [[ "${record}" == "true" ]]; then
+      RESULTS["${ENTRY_TARGET}"]="not_executable"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+    return 1
+  fi
+
+  set +e
+  (
+    set -euo pipefail
+    export SMOKEY_TEST_SCRIPT="${ENTRY_TARGET}"
+  if [[ -n "${ENTRY_TEST_DIR}" ]]; then
+    export SMOKEY_TEST_DIR="${ENTRY_TEST_DIR}"
+  else
+    unset -v SMOKEY_TEST_DIR || true
+  fi
+    echo ">> running ${SMOKEY_TEST_SCRIPT}"
+    "${SMOKEY_TEST_SCRIPT}"
+  )
+  status=$?
+  set -e
+
+  if [[ "${record}" == "true" ]]; then
+    if [[ ${status} -eq ${SMOKEY_SKIP_CODE} ]]; then
+      RESULTS["${ENTRY_TARGET}"]="setup_aborted"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+      SKIP_REST=true
+      SKIP_REASON="setup"
+      return ${status}
+    fi
+
+    case ${status} in
+      0)
+        RESULTS["${ENTRY_TARGET}"]="ok"
+        if [[ "${phase}" == "regular" ]]; then
+          REGULAR_OK=$((REGULAR_OK + 1))
+        else
+          TEARDOWN_RESULTS["${entry}"]="ok"
+        fi
+        ;;
+      130)
+        echo "!! ${ENTRY_TARGET} interrupted"
+        RESULTS["${ENTRY_TARGET}"]="interrupted"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+        if [[ "${phase}" != "regular" ]]; then
+          TEARDOWN_RESULTS["${entry}"]="interrupted"
+        fi
+        ;;
+      *)
+        echo "!! ${ENTRY_TARGET} failed"
+        RESULTS["${ENTRY_TARGET}"]="failed"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+        if [[ "${phase}" != "regular" ]]; then
+          TEARDOWN_RESULTS["${entry}"]="failed"
+        fi
+        ;;
+    esac
+
+    if [[ "${ENTRY_IS_SETUP}" == "true" && ${status} -ne 0 ]]; then
+      SKIP_REST=true
+      SKIP_REASON="setup"
+      INITIAL_SETUP_OK=false
+    fi
+
+    if [[ "${FAIL_FAST}" == "true" && ${status} -ne 0 && "${ENTRY_IS_TEARDOWN}" == "false" ]]; then
+      SKIP_REST=true
+      SKIP_REASON="fail-fast"
+    fi
+  fi
+
+  return ${status}
+}
+
+if [[ "${REUSE_STATE}" == "false" && ${#teardown_entries[@]} -gt 0 ]]; then
+  for teardown_entry in "${teardown_entries[@]}"; do
+    if ! run_entry "${teardown_entry}" "pre-teardown" "" "false"; then
+      TEARDOWN_RESULTS["${teardown_entry}"]="failed"
+      echo "smokey: initial teardown failed (${teardown_entry})" >&2
+      exit 1
+    else
+      TEARDOWN_RESULTS["${teardown_entry}"]="ok"
+    fi
+  done
+fi
+
+if [[ "${SKIP_REST}" == "false" ]]; then
+  for entry in "${regular_entries[@]}"; do
+    if [[ "${SKIP_REST}" == "true" ]]; then
+      run_entry "${entry}" "regular" "${SKIP_REASON:-setup}"
+      continue
+    fi
+    run_entry "${entry}" "regular" ""
+  done
+fi
+
+if [[ "${PRESERVE}" == "false" ]]; then
+  for teardown_entry in "${teardown_entries[@]}"; do
+    run_entry "${teardown_entry}" "teardown" ""
+  done
+else
+  for teardown_entry in "${teardown_entries[@]}"; do
+    run_entry "${teardown_entry}" "teardown" "preserve"
+  done
+fi
+
+echo "--- smokey summary ---"
+if [[ "${REUSE_STATE}" == "false" && ${#teardown_entries[@]} -gt 0 ]]; then
+  echo "initial teardown:"
+  for teardown_entry in "${teardown_entries[@]}"; do
+    result="${TEARDOWN_RESULTS[\"${teardown_entry}\"]:-skipped}"
+    printf "  %s : %s\n" "$(basename "${teardown_entry}")" "${result}"
+  done
+fi
+
+echo "tests: ${REGULAR_OK}/${REGULAR_TOTAL}"
+if [[ ${FAIL_COUNT} -gt 0 ]]; then
+  echo "failures:"
+  for key in "${!RESULTS[@]}"; do
+    status="${RESULTS[$key]}"
+    [[ "${status}" == "ok" ]] && continue
+    printf "  %-15s %s\n" "${status}" "${key}"
+  done
+fi
+
+if [[ ${FAIL_COUNT} -gt 0 ]]; then
+  exit 1
+fi
+exit 0
