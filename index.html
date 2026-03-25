@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smokey · Deterministic smoke tests for monorepos</title>
+    <link rel="stylesheet" href="assets/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <header>
+      <div class="container hero">
+        <div>
+          <p class="tagline">CLI · smoke tests · automation</p>
+          <h1>Smokey keeps your smoke tests honest.</h1>
+          <p>
+            A tiny Bash runner that executes numbered suites, snapshots environment variables, and fails fast when something smells wrong. No YAML, no daemons — just predictable smoke tests that work on any CI runner or developer laptop.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/micwin/smokey" target="_blank" rel="noopener">View on GitHub</a>
+            <a class="btn btn-ghost" href="https://github.com/micwin/smokey#readme" target="_blank" rel="noopener">Read the guide</a>
+          </div>
+        </div>
+        <div class="card code-block">
+          <pre><code>$ ./smokey.sh
+>> running tests.d/000-setup/run.sh
+>> running tests.d/010-api-health.sh
+!! api-health failed (timeout)
+--- smokey summary ---
+tests: 1/2 · failures:
+  failed        tests.d/010-api-health.sh</code></pre>
+        </div>
+      </div>
+    </header>
+
+    <section>
+      <div class="container">
+        <p class="tagline">Why Smokey</p>
+        <h2 class="section-title">Modern smoke tests without a full test framework.</h2>
+        <div class="card-grid">
+          <article class="card">
+            <h3>Deterministic order</h3>
+            <p>Smokey executes files alphabetically (000, 010, …, 999). You always know what ran before what — no hidden scheduler.</p>
+          </article>
+          <article class="card">
+            <h3>Setup &amp; teardown built in</h3>
+            <p>`000-*` can short-circuit the suite with <code>SMOKEY_SKIP_CODE</code>, <code>999-* </code> always run pre/post to clean stragglers.</p>
+          </article>
+          <article class="card">
+            <h3>Nested &amp; isolated</h3>
+            <p>Every invocation gets a random <code>SMOKEY_STATE_DIR</code>, so nested suites never clobber each other’s temp files.</p>
+          </article>
+          <article class="card">
+            <h3>Portable shell</h3>
+            <p>All you need is Bash. Works on macOS, Linux, CI containers, or the production host you are auditing.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <p class="tagline">Workflow</p>
+        <h2 class="section-title">Three commands to wire up reliable smoke tests.</h2>
+        <div class="steps">
+          <div class="step">
+            <span>01</span>
+            <h3>Describe the suite</h3>
+            <p>Create `tests.d/` with numbered scripts or directories. Each entry gets `SMOKEY_TEST_ROOT`, `SMOKEY_TEST_SCRIPT`, and optional `SMOKEY_TEST_DIR`.</p>
+          </div>
+          <div class="step">
+            <span>02</span>
+            <h3>Run locally &amp; in CI</h3>
+            <p>Execute `./smokey.sh --tests-dir tests.d` anywhere. Pass `--fail-fast`, `--preserve`, or `--reuse-state` when debugging flakes.</p>
+          </div>
+          <div class="step">
+            <span>03</span>
+            <h3>Ship confidence</h3>
+            <p>Use Smokey’s exit code as a deployment guardrail. The summary prints only non-OK steps so logs stay readable for humans.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <p class="tagline">Feature deep dive</p>
+        <div class="feature-list">
+          <div class="feature">
+            Hands-free environment cleanup — Smokey runs teardown both before and after your suite so stale clusters never break new runs.
+          </div>
+          <div class="feature">
+            Subshell isolation — nested suites inherit exports but never mutate the parent shell’s PATH, options, or variables.
+          </div>
+          <div class="feature">
+            Clear APIs — helper env vars (`SMOKEY_SKIP_CODE`, `SMOKEY_STATE_DIR`, etc.) give each script context without global config.
+          </div>
+          <div class="feature">
+            Observability baked in — the summary only lists failures and skip reasons, making CI logs skimmable.
+          </div>
+          <div class="feature">
+            Bring-your-own tools — run `go test`, `docker compose`, Ansible, curl… anything you can script is fair game.
+          </div>
+          <div class="feature">
+            Works with GitHub Actions, GitLab CI, Jenkins, or cron jobs with zero additional dependencies.
+          </div>
+          <div class="feature">
+            Friendly install story — grab the one-liner installer or a signed Debian package from the GitHub Releases tab.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <p class="tagline">CLI snippet</p>
+        <h2 class="section-title">Install once, run everywhere.</h2>
+        <div class="card code-block">
+<pre><code># install for current user (latest stable tag)
+curl -fsSL https://raw.githubusercontent.com/micwin/smokey/v0.1.1/install.sh | bash
+
+# or install the Debian package from Releases
+curl -LO https://github.com/micwin/smokey/releases/download/v0.1.1/smokey_0.1.1_amd64.deb
+sudo dpkg -i smokey_0.1.1_amd64.deb
+
+# bootstrap via git
+git clone git@github.com:micwin/smokey.git
+cd smokey && ./smokey.sh
+
+# override tests directory only when needed
+../smokey/smokey.sh --tests-dir ./infra/tests.d --fail-fast</code></pre>
+        </div>
+        <div class="hero-actions" style="margin-top:1rem;">
+          <a class="btn btn-primary" href="https://github.com/micwin/smokey/releases/download/v0.1.1/smokey_0.1.1_amd64.deb">Download Debian package</a>
+          <a class="btn btn-ghost" href="https://github.com/micwin/smokey/releases/download/v0.1.1/smokey_0.1.1.sh">Download smokey.sh</a>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <p class="tagline">Trusted in ops &amp; testing</p>
+        <h2 class="section-title">Used to babysit container clusters, verify infra drift, and guard mono repos.</h2>
+        <div class="logos">
+          <span>Platform teams</span>
+          <span>Release managers</span>
+          <span>QA engineers</span>
+          <span>Site reliability folks</span>
+          <span>Security auditors</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container">
+        <h2>Ready to automate your smoke checks?</h2>
+        <p>Drop Smokey into your repo, describe the most important workflows, and keep shipping without guesswork.</p>
+        <div class="hero-actions" style="justify-content:center;">
+          <a class="btn btn-primary" href="https://github.com/micwin/smokey" target="_blank" rel="noopener">Get Smokey</a>
+          <a class="btn btn-ghost" href="https://github.com/micwin/smokey/tree/develop/tests.d" target="_blank" rel="noopener">Browse sample tests</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Smokey · MIT Licensed · Crafted for boring predictable smoke tests.
+    </footer>
+  </body>
+</html>
