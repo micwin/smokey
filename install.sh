@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
 TARGET_NAME="smokey"
-BINARY_SOURCE="${SCRIPT_DIR}/smokey.sh"
+BINARY_SOURCE="${SCRIPT_DIR}/smokey"
 if [[ ! -x "${BINARY_SOURCE}" ]]; then
   chmod +x "${BINARY_SOURCE}"
 fi

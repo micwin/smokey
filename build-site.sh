@@ -10,9 +10,9 @@ if [[ ! -d "${SRC_DIR}" ]]; then
   exit 1
 fi
 
-VERSION_LINE=$(grep -E '^SMOKEY_VERSION=' "${ROOT_DIR}/smokey.sh" || true)
+VERSION_LINE=$(grep -E '^SMOKEY_VERSION=' "${ROOT_DIR}/smokey" || true)
 if [[ -z "${VERSION_LINE}" ]]; then
-  echo "unable to read SMOKEY_VERSION from smokey.sh" >&2
+  echo "unable to read SMOKEY_VERSION from smokey" >&2
   exit 1
 fi
 SMOKEY_VERSION="${VERSION_LINE#SMOKEY_VERSION=\"}"

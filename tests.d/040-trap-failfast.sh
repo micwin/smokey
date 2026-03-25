@@ -31,7 +31,7 @@ EOF
 
 chmod +x "${SUITE_DIR}/010-trap.sh" "${SUITE_DIR}/020-should-skip.sh"
 
-if "${PROJECT_ROOT}/smokey.sh" --tests-dir "${SUITE_DIR}" --fail-fast; then
+if "${PROJECT_ROOT}/smokey" --tests-dir "${SUITE_DIR}" --fail-fast; then
   echo "[040-trap-failfast] smokey should have failed" >&2
   exit 1
 fi

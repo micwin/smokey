@@ -26,7 +26,7 @@ jobs:
       - name: Determine version
         id: vars
         run: |
-          VERSION=$(grep -o 'SMOKEY_VERSION="[0-9]\+\.[0-9]\+\.[0-9]\+"' smokey.sh | cut -d'"' -f2)
+          VERSION=$(grep -o 'SMOKEY_VERSION="[0-9]\+\.[0-9]\+\.[0-9]\+"' smokey | cut -d'"' -f2)
           if [[ -z "${VERSION}" ]]; then
             echo "SMOKEY_VERSION not found" >&2
             exit 1

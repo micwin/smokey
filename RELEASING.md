@@ -4,7 +4,7 @@ This repository keeps all day-to-day development on `develop`. The `release` bra
 
 ## 1. Verify develop
 - Ensure all desired changes are merged into `develop`.
-- Optionally run the smokey self-tests locally: `cd smokey && ./smokey.sh --tests-dir tests.d`.
+- Optionally run the smokey self-tests locally: `cd smokey && ./smokey --tests-dir tests.d`.
 - If you changed the marketing site, regenerate the static output via `./build-site.sh`. (The GitHub workflow does this again, but running it locally helps catch mistakes.)
 
 ## 2. Merge develop into release
@@ -14,7 +14,7 @@ This repository keeps all day-to-day development on `develop`. The `release` bra
 ## 3. Push release
 - `git push origin release`
 - GitHub Actions runs `.github/workflows/release.yml` with these steps:
-  1. Read `SMOKEY_VERSION` from `smokey.sh`.
+  1. Read `SMOKEY_VERSION` from `smokey`.
   2. Execute `./package-deb.sh` (which bumps versions if needed, rebuilds the marketing site, and outputs `dist/smokey_<version>_amd64.deb` plus `dist/smokey_<version>.sh`).
   3. Create/push tag `v<version>`.
   4. Publish a GitHub Release with both artifacts attached.
@@ -23,7 +23,7 @@ This repository keeps all day-to-day development on `develop`. The `release` bra
 ## 4. Monitor the workflow
 - Check the Actions tab for the `Release Smokey` workflow run. It should finish successfully.
 - After success:
-  * The GitHub release contains the `.deb` and the raw `smokey.sh`.
+  * The GitHub release contains the `.deb` and the raw `smokey` script.
   * https://micwin.github.io/smokey/ shows the updated site (with the new version in download links).
 
 ## 5. Optional cleanup

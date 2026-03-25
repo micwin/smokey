@@ -14,26 +14,26 @@ Smokey is a lightweight smoke-test runner for mono-repo projects. It expects a d
 ## Usage
 ```
 # From a project directory that contains tests.d
-../smokey/smokey.sh --tests-dir tests.d
+../smokey/smokey --tests-dir tests.d
 
 # Override directory explicitly (relative or absolute)
-path/to/smokey.sh --tests-dir ./custom-tests
+path/to/smokey --tests-dir ./custom-tests
 
 # Fail fast on the first error
-smokey.sh --fail-fast --tests-dir tests.d
+smokey --fail-fast --tests-dir tests.d
 
 # Keep the environment around for debugging (skip final teardown)
-smokey.sh --preserve --tests-dir tests.d
+smokey --preserve --tests-dir tests.d
 
 # Reuse an existing test state (skip initial teardown)
-smokey.sh --reuse-state --tests-dir tests.d
+smokey --reuse-state --tests-dir tests.d
 
 # Run smokey's own test suite
 cd smokey
-./smokey.sh --tests-dir tests.d
+./smokey --tests-dir tests.d
 ```
 
-Source `enter.sh` at the repo root (`. ./enter.sh`) to automatically add `smokey/` to your `PATH`, then call `smokey.sh` without specifying the full path.
+Source `enter.sh` at the repo root (`. ./enter.sh`) to automatically add `smokey/` to your `PATH`, then call `smokey` without specifying the full path.
 
 ## Test directory layout
 - Place numbered scripts or directories under `tests.d/`. Example:
@@ -67,15 +67,15 @@ See `vaultline/tests.d/` for a reference suite:
 Run it via:
 ```
 cd vaultline
-../smokey/smokey.sh --tests-dir tests.d
+../smokey/smokey --tests-dir tests.d
 ```
 
 ## Website & releases
 - Edit the marketing site under `site-src/` (placeholders such as `{{VERSION}}` are replaced automatically), then run `./build-site.sh` to regenerate the static assets in `site/`.
 - `./package-deb.sh` bumps `SMOKEY_VERSION`, rebuilds the site, and creates `dist/smokey_<version>_amd64.deb`.
 - Pushing the `release` branch triggers the automated GitHub Actions workflow:
-  1. determine the version from `smokey.sh`
+  1. determine the version from `smokey`
   2. run `package-deb.sh` and package the `.deb`
   3. tag the commit (`v<version>`) and publish a GitHub Release with the Debian package
   4. deploy the generated site (`site/`) to the `pages` branch
-- Releases also attach a standalone `smokey_<version>.sh` script so users can download and run the CLI without the `.deb` package.
+- Releases also attach a standalone `smokey_<version>` script so users can download and run the CLI without the `.deb` package.

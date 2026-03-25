@@ -22,7 +22,7 @@ exit 77
 EOF
 chmod +x "${SUITE_DIR}/010-hard-exit.sh"
 
-if "${PROJECT_ROOT}/smokey.sh" --tests-dir "${SUITE_DIR}"; then
+if "${PROJECT_ROOT}/smokey" --tests-dir "${SUITE_DIR}"; then
   echo "[060-hard-exit] smokey unexpectedly succeeded" >&2
   exit 1
 fi

@@ -35,7 +35,7 @@ EOF
 
 chmod +x "${SUITE_DIR}/"*".sh"
 
-if "${PROJECT_ROOT}/smokey.sh" --tests-dir "${SUITE_DIR}" --fail-fast; then
+if "${PROJECT_ROOT}/smokey" --tests-dir "${SUITE_DIR}" --fail-fast; then
   echo "[020-fail-fast] expected failure but smokey exited 0" >&2
   exit 1
 fi

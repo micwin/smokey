@@ -92,7 +92,7 @@ chmod +x "${INNER_TESTS}/010-env-source/run.sh" \
 export HAVOC_SUPPORT_DIR="${SUPPORT_DIR}"
 
 LOG_FILE="${SUPPORT_DIR}/inner-smokey.log"
-if ! "${PROJECT_ROOT}/smokey.sh" --tests-dir "${INNER_TESTS}" >"${LOG_FILE}" 2>&1; then
+if ! "${PROJECT_ROOT}/smokey" --tests-dir "${INNER_TESTS}" >"${LOG_FILE}" 2>&1; then
   cat "${LOG_FILE}" >&2
   echo "[080-subdir-havoc] nested smokey run failed" >&2
   exit 1

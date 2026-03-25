@@ -25,7 +25,7 @@ EOF
 chmod +x "${SUITE_DIR}/010-signal.sh"
 
 set +e
-"${PROJECT_ROOT}/smokey.sh" --tests-dir "${SUITE_DIR}" >"${SUITE_DIR}/run.log" 2>&1
+"${PROJECT_ROOT}/smokey" --tests-dir "${SUITE_DIR}" >"${SUITE_DIR}/run.log" 2>&1
 status=$?
 set -e
 

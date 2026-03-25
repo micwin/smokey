@@ -48,7 +48,7 @@ set -euo pipefail
 PROJECT_ROOT="${PROJECT_ROOT}"
 LEVELC_DIR="${LEVELC_DIR}"
 STATE_FILE="${LEVELC_STATE}"
-if ! "\${PROJECT_ROOT}/smokey.sh" --tests-dir "\${LEVELC_DIR}" --preserve; then
+if ! "\${PROJECT_ROOT}/smokey" --tests-dir "\${LEVELC_DIR}" --preserve; then
   echo "[level-b] preserve run failed" >&2
   exit 1
 fi
@@ -56,7 +56,7 @@ if [[ ! -f "\${STATE_FILE}" ]]; then
   echo "[level-b] state missing after preserve run" >&2
   exit 1
 fi
-if ! "\${PROJECT_ROOT}/smokey.sh" --tests-dir "\${LEVELC_DIR}" --reuse-state; then
+if ! "\${PROJECT_ROOT}/smokey" --tests-dir "\${LEVELC_DIR}" --reuse-state; then
   echo "[level-b] reuse-state run failed" >&2
   exit 1
 fi
@@ -71,7 +71,7 @@ chmod +x "${LEVELC_DIR}/000-setup/run.sh" \
           "${LEVELC_DIR}/999-teardown/run.sh" \
           "${LEVELB_TESTS}/010-nested.sh"
 
-if ! "${PROJECT_ROOT}/smokey.sh" --tests-dir "${LEVELB_TESTS}"; then
+if ! "${PROJECT_ROOT}/smokey" --tests-dir "${LEVELB_TESTS}"; then
   echo "[050-recursive] nested smokey run failed" >&2
   exit 1
 fi

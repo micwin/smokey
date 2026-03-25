@@ -10,7 +10,7 @@ print_header() {
 usage() {
   print_header
   cat <<'USAGE'
-Usage: smokey.sh [OPTIONS] [--tests-dir DIR]
+Usage: smokey [OPTIONS] [--tests-dir DIR]
 
 Runs numbered smoke tests located in DIR (default: ./tests.d relative to current working directory).
 Entries can be executable scripts or directories containing exactly one executable file.

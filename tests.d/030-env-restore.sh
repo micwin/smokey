@@ -50,7 +50,7 @@ _smokey_child_injected_var="from-child"
 EOF
 chmod +x "${SUITE_DIR}/010-mutant.sh"
 
-if ! "${PROJECT_ROOT}/smokey.sh" --tests-dir "${SUITE_DIR}"; then
+if ! "${PROJECT_ROOT}/smokey" --tests-dir "${SUITE_DIR}"; then
   echo "[030-env-restore] nested smokey run failed" >&2
   exit 1
 fi

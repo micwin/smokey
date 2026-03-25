@@ -20,7 +20,7 @@ echo "[basic] pass"
 EOF
 chmod +x "${SUITE_DIR}/010-pass.sh"
 
-if ! "${PROJECT_ROOT}/smokey.sh" --tests-dir "${SUITE_DIR}"; then
+if ! "${PROJECT_ROOT}/smokey" --tests-dir "${SUITE_DIR}"; then
   echo "[010-basic] smokey run failed" >&2
   exit 1
 fi

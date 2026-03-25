@@ -7,7 +7,7 @@ PKG_DIR="${DIST_DIR}/smokey-deb"
 ARCH="amd64"
 mkdir -p "${DIST_DIR}"
 
-CURRENT_VERSION=$(grep -o 'SMOKEY_VERSION="[0-9]\+\.[0-9]\+\.[0-9]\+"' "${ROOT_DIR}/smokey.sh" | cut -d'"' -f2)
+CURRENT_VERSION=$(grep -o 'SMOKEY_VERSION="[0-9]\+\.[0-9]\+\.[0-9]\+"' "${ROOT_DIR}/smokey" | cut -d'"' -f2)
 if [[ -z "${CURRENT_VERSION}" ]]; then
   echo "Unable to detect current version" >&2
   exit 1
@@ -28,14 +28,14 @@ if [[ ! "${NEW_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 if [[ "${NEW_VERSION}" != "${CURRENT_VERSION}" ]]; then
-  sed -i "s/SMOKEY_VERSION=\"${CURRENT_VERSION}\"/SMOKEY_VERSION=\"${NEW_VERSION}\"/" "${ROOT_DIR}/smokey.sh"
+  sed -i "s/SMOKEY_VERSION=\"${CURRENT_VERSION}\"/SMOKEY_VERSION=\"${NEW_VERSION}\"/" "${ROOT_DIR}/smokey"
 fi
 
 "${ROOT_DIR}/build-site.sh"
 
 rm -rf "${PKG_DIR}"
 mkdir -p "${PKG_DIR}/DEBIAN" "${PKG_DIR}/usr/local/bin" "${PKG_DIR}/usr/share/doc/smokey"
-install -m 0755 "${ROOT_DIR}/smokey.sh" "${PKG_DIR}/usr/local/bin/smokey"
+install -m 0755 "${ROOT_DIR}/smokey" "${PKG_DIR}/usr/local/bin/smokey"
 install -m 0644 "${ROOT_DIR}/README.md" "${PKG_DIR}/usr/share/doc/smokey/README"
 
 cat > "${PKG_DIR}/DEBIAN/control" <<CTRL
@@ -57,8 +57,8 @@ chmod 644 usr/share/doc/smokey/README
 cd "${DIST_DIR}"
 dpkg-deb --build "smokey-deb" "smokey_${NEW_VERSION}_${ARCH}.deb"
 
-SCRIPT_ASSET="smokey_${NEW_VERSION}.sh"
-cp "${ROOT_DIR}/smokey.sh" "${DIST_DIR}/${SCRIPT_ASSET}"
+SCRIPT_ASSET="smokey_${NEW_VERSION}"
+cp "${ROOT_DIR}/smokey" "${DIST_DIR}/${SCRIPT_ASSET}"
 chmod +x "${DIST_DIR}/${SCRIPT_ASSET}"
 
 echo "Built smokey ${NEW_VERSION}"

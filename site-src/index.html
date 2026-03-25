@@ -24,7 +24,7 @@
           </div>
         </div>
         <div class="card code-block">
-          <pre><code>$ ./smokey.sh
+          <pre><code>$ ./smokey
 >> running tests.d/000-setup/run.sh
 >> running tests.d/010-api-health.sh
 !! api-health failed (timeout)
@@ -73,7 +73,7 @@ tests: 1/2 · failures:
           <div class="step">
             <span>02</span>
             <h3>Run locally &amp; in CI</h3>
-            <p>Execute `./smokey.sh --tests-dir tests.d` anywhere. Pass `--fail-fast`, `--preserve`, or `--reuse-state` when debugging flakes.</p>
+            <p>Execute `./smokey --tests-dir tests.d` anywhere. Pass `--fail-fast`, `--preserve`, or `--reuse-state` when debugging flakes.</p>
           </div>
           <div class="step">
             <span>03</span>
@@ -127,14 +127,14 @@ sudo dpkg -i smokey_{{VERSION}}_amd64.deb
 
 # bootstrap via git
 git clone git@github.com:micwin/smokey.git
-cd smokey && ./smokey.sh
+cd smokey && ./smokey
 
 # override tests directory only when needed
-../smokey/smokey.sh --tests-dir ./infra/tests.d --fail-fast</code></pre>
+../smokey/smokey --tests-dir ./infra/tests.d --fail-fast</code></pre>
         </div>
         <div class="hero-actions" style="margin-top:1rem;">
           <a class="btn btn-primary" href="https://github.com/micwin/smokey/releases/download/v{{VERSION}}/smokey_{{VERSION}}_amd64.deb">Download Debian package</a>
-          <a class="btn btn-ghost" href="https://github.com/micwin/smokey/releases/download/v{{VERSION}}/smokey_{{VERSION}}.sh">Download smokey.sh</a>
+          <a class="btn btn-ghost" href="https://github.com/micwin/smokey/releases/download/v{{VERSION}}/smokey_{{VERSION}}">Download smokey</a>
         </div>
       </div>
     </section>
