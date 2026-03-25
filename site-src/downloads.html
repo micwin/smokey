@@ -49,11 +49,13 @@
       const releasesContainer = document.getElementById('releases');
       const emptyState = document.getElementById('releases-empty');
 
+      const scriptPattern = /smokey_\d+\.\d+\.\d+(?:\.sh)?$/;
+
       function formatRelease(release) {
         const version = release.tag_name;
         const date = new Date(release.published_at).toLocaleDateString();
         const deb = release.assets.find((a) => a.name.endsWith('_amd64.deb'));
-        const script = release.assets.find((a) => /smokey_\d+\.\d+\.\d+$/.test(a.name));
+        const script = release.assets.find((a) => scriptPattern.test(a.name));
         return { version, date, deb, script, url: release.html_url };
       }
 
