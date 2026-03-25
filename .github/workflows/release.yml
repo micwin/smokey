@@ -54,6 +54,7 @@ jobs:
           name: Smokey v${{ steps.vars.outputs.version }}
           files: |
             dist/smokey_${{ steps.vars.outputs.version }}_amd64.deb
+            dist/smokey_${{ steps.vars.outputs.version }}
             dist/smokey_${{ steps.vars.outputs.version }}.sh
           draft: false
           prerelease: false

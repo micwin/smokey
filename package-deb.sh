@@ -57,8 +57,12 @@ chmod 644 usr/share/doc/smokey/README
 cd "${DIST_DIR}"
 dpkg-deb --build "smokey-deb" "smokey_${NEW_VERSION}_${ARCH}.deb"
 
-SCRIPT_ASSET="smokey_${NEW_VERSION}"
-cp "${ROOT_DIR}/smokey" "${DIST_DIR}/${SCRIPT_ASSET}"
-chmod +x "${DIST_DIR}/${SCRIPT_ASSET}"
+BASE_ASSET="smokey_${NEW_VERSION}"
+cp "${ROOT_DIR}/smokey" "${DIST_DIR}/${BASE_ASSET}"
+chmod +x "${DIST_DIR}/${BASE_ASSET}"
+
+SCRIPT_WITH_EXT="${BASE_ASSET}.sh"
+cp "${ROOT_DIR}/smokey" "${DIST_DIR}/${SCRIPT_WITH_EXT}"
+chmod +x "${DIST_DIR}/${SCRIPT_WITH_EXT}"
 
 echo "Built smokey ${NEW_VERSION}"
