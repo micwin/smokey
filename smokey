@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SMOKEY_VERSION="0.1.8"
+SMOKEY_VERSION="0.1.10"
 
 print_header() {
   echo "smokey ${SMOKEY_VERSION}"
@@ -20,6 +20,7 @@ Options:
   --fail-fast       Abort remaining regular tests after the first failure (teardown still runs)
   --preserve        Skip teardown entries at the end (keeps artifacts)
   --reuse-state     Skip the initial teardown pass (reuse existing state)
+  --version         Show version and exit
   -h, --help        Show this help message
 USAGE
   if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
@@ -51,6 +52,10 @@ while [[ $# -gt 0 ]]; do
     --reuse-state)
       REUSE_STATE=true
       shift
+      ;;
+    --version|-V)
+      print_header
+      exit 0
       ;;
     -h|--help)
       usage
@@ -131,6 +136,7 @@ done
 
 declare -A RESULTS=()
 declare -A TEARDOWN_RESULTS=()
+declare -A INITIAL_TEARDOWN_RESULTS=()
 INITIAL_TEARDOWN_OK=true
 INITIAL_SETUP_OK=true
 REGULAR_OK=0
@@ -264,11 +270,11 @@ run_entry() {
 if [[ "${REUSE_STATE}" == "false" && ${#teardown_entries[@]} -gt 0 ]]; then
   for teardown_entry in "${teardown_entries[@]}"; do
     if ! run_entry "${teardown_entry}" "pre-teardown" "" "false"; then
-      TEARDOWN_RESULTS["${teardown_entry}"]="failed"
+      INITIAL_TEARDOWN_RESULTS["${teardown_entry}"]="failed"
       echo "smokey: initial teardown failed (${teardown_entry})" >&2
       exit 1
     else
-      TEARDOWN_RESULTS["${teardown_entry}"]="ok"
+      INITIAL_TEARDOWN_RESULTS["${teardown_entry}"]="ok"
     fi
   done
 fi
@@ -297,12 +303,26 @@ echo "--- smokey summary ---"
 if [[ "${REUSE_STATE}" == "false" && ${#teardown_entries[@]} -gt 0 ]]; then
   echo "initial teardown:"
   for teardown_entry in "${teardown_entries[@]}"; do
-    result="${TEARDOWN_RESULTS[\"${teardown_entry}\"]:-skipped}"
+    result="${INITIAL_TEARDOWN_RESULTS["${teardown_entry}"]:-skipped}"
     printf "  %s : %s\n" "$(basename "${teardown_entry}")" "${result}"
   done
 fi
 
-echo "tests: ${REGULAR_OK}/${REGULAR_TOTAL}"
+if [[ ${#teardown_entries[@]} -gt 0 ]]; then
+  echo "final teardown:"
+  for teardown_entry in "${teardown_entries[@]}"; do
+    result="${TEARDOWN_RESULTS["${teardown_entry}"]:-skipped}"
+    printf "  %s : %s\n" "$(basename "${teardown_entry}")" "${result}"
+  done
+fi
+
+tests_line="tests: ${REGULAR_OK}/${REGULAR_TOTAL}"
+if [[ ${REGULAR_OK} -eq ${REGULAR_TOTAL} ]]; then
+  tests_line+=" ok"
+else
+  tests_line+=" fail"
+fi
+echo "${tests_line}"
 if [[ ${FAIL_COUNT} -gt 0 ]]; then
   echo "failures:"
   for key in "${!RESULTS[@]}"; do
