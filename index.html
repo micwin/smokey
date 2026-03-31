@@ -16,8 +16,8 @@
           <p class="tagline">CLI · smoke tests · automation</p>
           <h1>Smokey keeps your smoke tests honest.</h1>
           <p>
-            A tiny Bash runner that executes numbered suites, snapshots environment variables, and gives you the option to fail fast as soon as something smells wrong.
-            No YAML, no daemons — just boring, predictable smoke tests that work on any CI runner or developer laptop.
+            A tiny Bash runner that executes numbered <code>.d</code> suites, provides explicit env sharing, and contains Bash edge cases such as exit traps.
+            No YAML, no daemons — just boring, predictable smoke tests that work on any CI runner, developer laptop, container, Raspberry Pi, or VM.
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="https://github.com/micwin/smokey" target="_blank" rel="noopener">View on GitHub</a>
@@ -26,7 +26,7 @@
           </div>
         </div>
         <div class="card code-block">
-          <pre><code>$ ./smokey
+          <pre><code>$ smokey
 >> running tests.d/000-setup/run.sh
 >> running tests.d/010-api-health.sh
 !! api-health failed (timeout)
@@ -40,23 +40,27 @@ tests: 1/2 · failures:
     <section>
       <div class="container">
         <p class="tagline">Why Smokey</p>
-        <h2 class="section-title">Modern smoke tests without a full test framework.</h2>
+        <h2 class="section-title">Modern smoke automation with proven Bash instead of YAML gymnastics.</h2>
         <div class="card-grid">
           <article class="card">
             <h3>Deterministic order</h3>
             <p>Smokey executes files alphabetically (000, 010, …, 999). You always know what ran before what — no hidden scheduler.</p>
           </article>
           <article class="card">
-            <h3>Setup &amp; teardown built in</h3>
-            <p>`000-*` can short-circuit the suite with <code>SMOKEY_SKIP_CODE</code>, <code>999-* </code> always run pre/post to clean stragglers.</p>
+            <h3>Liberty-first structure</h3>
+            <p>Smokey imposes almost no repo structure beyond numbered entries, so you can keep your project layout instead of bending it around an opinionated framework.</p>
           </article>
           <article class="card">
-            <h3>Nested &amp; isolated</h3>
-            <p>Every invocation gets a random <code>SMOKEY_STATE_DIR</code>, so nested suites never clobber each other’s temp files.</p>
+            <h3>Setup &amp; teardown built in</h3>
+            <p>You write the setup and teardown scripts yourself; Smokey makes sure they run automatically at the right points before and after the suite.</p>
+          </article>
+          <article class="card">
+            <h3>Isolated</h3>
+            <p>Every invocation gets a random <code>SMOKEY_STATE_DIR</code>, and cross-step env vars only persist when you save them explicitly through built-in helper commands.</p>
           </article>
           <article class="card">
             <h3>Portable shell</h3>
-            <p>All you need is Bash. Works on macOS, Linux, CI containers, or the production host you are auditing.</p>
+            <p>All you need is Bash. Smokey wraps that power in guard rails against unwanted exits, leaky traps, env-var drift, and shared-state surprises.</p>
           </article>
         </div>
       </div>
@@ -65,17 +69,37 @@ tests: 1/2 · failures:
     <section>
       <div class="container">
         <p class="tagline">Workflow</p>
-        <h2 class="section-title">Three commands to wire up reliable smoke tests.</h2>
+        <h2 class="section-title">Set up a <code>tests.d</code> directory</h2>
         <div class="steps">
           <div class="step">
             <span>01</span>
-            <h3>Describe the suite</h3>
-            <p>Create `tests.d/` with numbered scripts or directories. Each entry gets `SMOKEY_TEST_ROOT`, `SMOKEY_TEST_SCRIPT`, and optional `SMOKEY_TEST_DIR`.</p>
+            <h3>Lay out the suite</h3>
+            <p>Create a <code>tests.d/</code> directory in your project root and fill it with numbered scripts.</p>
+            <div class="card code-block">
+              <pre><code>tests.d/
+  000-setup.sh
+  010-check-binaries.sh
+  020-check-network.sh
+  999-cleanup.sh</code></pre>
+            </div>
+            <p>Use <code>000-*</code> for setup, regular numbered entries for the main checks, and <code>999-*</code> for cleanup.</p>
           </div>
           <div class="step">
             <span>02</span>
-            <h3>Run locally &amp; in CI</h3>
-            <p>Execute `./smokey --tests-dir tests.d` anywhere. Pass `--fail-fast`, `--preserve`, or `--reuse-state` when debugging flakes.</p>
+            <h3>Run locally</h3>
+            <div class="card code-block">
+          <pre><code>$ cd myproject
+$ smokey
+>> running tests.d/000-setup/run.sh
+>> running tests.d/010-api-health.sh
+!! api-health failed (timeout)
+--- smokey summary ---
+tests: 1/2 · failures:
+  failed        tests.d/010-api-health.sh</code></pre>
+        </div>
+
+            <p>Change into your project directory and run <code>smokey</code>.</p>
+            <p>Use <code>smokey --tests-dir tests.d</code> when the suite lives somewhere else. Pass <code>--fail-fast</code>, <code>--preserve</code>, or <code>--reuse-state</code> when debugging flakes.</p>
           </div>
           <div class="step">
             <span>03</span>
@@ -121,22 +145,22 @@ tests: 1/2 · failures:
         <h2 class="section-title">Install once, run everywhere.</h2>
         <div class="card code-block">
 <pre><code># install for current user (latest stable tag)
-curl -fsSL https://raw.githubusercontent.com/micwin/smokey/v0.1.10/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/micwin/smokey/v0.1.11/install.sh | bash
 
 # or install the Debian package from Releases
-curl -LO https://github.com/micwin/smokey/releases/download/v0.1.10/smokey_0.1.10_amd64.deb
-sudo dpkg -i smokey_0.1.10_amd64.deb
+curl -LO https://github.com/micwin/smokey/releases/download/v0.1.11/smokey_0.1.11_amd64.deb
+sudo dpkg -i smokey_0.1.11_amd64.deb
 
-# bootstrap via git
+# run directly from a cloned repo
 git clone git@github.com:micwin/smokey.git
-cd smokey && ./smokey
+cd smokey && smokey
 
 # override tests directory only when needed
-../smokey/smokey --tests-dir ./infra/tests.d --fail-fast</code></pre>
+smokey --tests-dir ./infra/tests.d --fail-fast</code></pre>
         </div>
         <div class="hero-actions hero-actions-centered" style="margin-top:1rem;">
-          <a class="btn btn-primary" href="https://github.com/micwin/smokey/releases/download/v0.1.10/smokey_0.1.10_amd64.deb">Download .deb</a>
-          <a class="btn btn-primary" href="https://github.com/micwin/smokey/releases/download/v0.1.10/smokey_0.1.10.sh">Download script</a>
+          <a class="btn btn-primary" href="https://github.com/micwin/smokey/releases/download/v0.1.11/smokey_0.1.11_amd64.deb">Download .deb</a>
+          <a class="btn btn-primary" href="https://github.com/micwin/smokey/releases/download/v0.1.11/smokey_0.1.11.sh">Download script</a>
           <a class="btn btn-primary" href="downloads.html">All downloads</a>
         </div>
       </div>
