@@ -2,7 +2,7 @@
 set -euo pipefail
 
 TEST_ROOT="${SMOKEY_TEST_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)}"
-if [[ "$(basename "${TEST_ROOT}")" != "tests.d" ]]; then
+if [[ "$(basename "${TEST_ROOT}")" != "tests.d" && "$(basename "${TEST_ROOT}")" != "selftests.d" ]]; then
   TEST_ROOT="$(cd "${TEST_ROOT}/.." && pwd)"
 fi
 PROJECT_ROOT="$(cd "${TEST_ROOT}/.." && pwd)"

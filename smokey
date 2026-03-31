@@ -99,6 +99,67 @@ SMOKEY_STATE_DIR="${STATE_PARENT}/${RUN_ID}"
 mkdir -p "${SMOKEY_STATE_DIR}"
 export SMOKEY_STATE_DIR
 export SMOKEY_STATE_PARENT="${STATE_PARENT}"
+SMOKEY_ENV_FILE="${SMOKEY_STATE_DIR}/shared.env"
+SMOKEY_HELPERS_FILE="${SMOKEY_STATE_DIR}/smokey-helpers.sh"
+SMOKEY_ENV_LOADER="${SMOKEY_STATE_DIR}/smokey-bash-env.sh"
+export SMOKEY_ENV_FILE
+export SMOKEY_HELPERS_FILE
+export SMOKEY_ENV_LOADER
+: > "${SMOKEY_ENV_FILE}"
+cat > "${SMOKEY_HELPERS_FILE}" <<'EOF'
+smokey_env__validate_name() {
+  [[ "$1" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]
+}
+
+smokey_env__rewrite() {
+  local name="$1"
+  local replacement="$2"
+  local temp_file
+  temp_file="$(mktemp "${SMOKEY_STATE_DIR}/env.XXXX")"
+  if [[ -f "${SMOKEY_ENV_FILE}" ]]; then
+    grep -vE "^(export ${name}=|unset ${name}$)" "${SMOKEY_ENV_FILE}" > "${temp_file}" || true
+  fi
+  if [[ -n "${replacement}" ]]; then
+    printf '%s\n' "${replacement}" >> "${temp_file}"
+  fi
+  mv "${temp_file}" "${SMOKEY_ENV_FILE}"
+}
+
+smokey_env_save() {
+  local name="$1"
+  if ! smokey_env__validate_name "${name}"; then
+    echo "smokey_env_save: invalid variable name: ${name}" >&2
+    return 1
+  fi
+  if [[ ! ${!name+x} ]]; then
+    echo "smokey_env_save: variable is not set: ${name}" >&2
+    return 1
+  fi
+  local escaped
+  printf -v escaped '%q' "${!name}"
+  smokey_env__rewrite "${name}" "export ${name}=${escaped}"
+}
+
+smokey_env_unset() {
+  local name="$1"
+  if ! smokey_env__validate_name "${name}"; then
+    echo "smokey_env_unset: invalid variable name: ${name}" >&2
+    return 1
+  fi
+  unset -v "${name}"
+  smokey_env__rewrite "${name}" "unset ${name}"
+}
+
+smokey_env_show() {
+  cat "${SMOKEY_ENV_FILE}"
+}
+EOF
+cat > "${SMOKEY_ENV_LOADER}" <<'EOF'
+# shellcheck disable=SC1090
+source "${SMOKEY_HELPERS_FILE}"
+# shellcheck disable=SC1090
+source "${SMOKEY_ENV_FILE}"
+EOF
 
 cleanup_state_dir() {
   if [[ "${PRESERVE}" == "true" ]]; then
@@ -205,11 +266,12 @@ run_entry() {
   (
     set -euo pipefail
     export SMOKEY_TEST_SCRIPT="${ENTRY_TARGET}"
-  if [[ -n "${ENTRY_TEST_DIR}" ]]; then
-    export SMOKEY_TEST_DIR="${ENTRY_TEST_DIR}"
-  else
-    unset -v SMOKEY_TEST_DIR || true
-  fi
+    export BASH_ENV="${SMOKEY_ENV_LOADER}"
+    if [[ -n "${ENTRY_TEST_DIR}" ]]; then
+      export SMOKEY_TEST_DIR="${ENTRY_TEST_DIR}"
+    else
+      unset -v SMOKEY_TEST_DIR || true
+    fi
     echo ">> running ${SMOKEY_TEST_SCRIPT}"
     "${SMOKEY_TEST_SCRIPT}"
   )

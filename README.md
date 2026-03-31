@@ -14,7 +14,7 @@ Smokey is a lightweight smoke-test runner for mono-repo projects. It expects a d
 ## Usage
 ```
 # From a project directory that contains tests.d
-../smokey/smokey --tests-dir tests.d
+smokey --tests-dir tests.d
 
 # Override directory explicitly (relative or absolute)
 path/to/smokey --tests-dir ./custom-tests
@@ -28,12 +28,17 @@ smokey --preserve --tests-dir tests.d
 # Reuse an existing test state (skip initial teardown)
 smokey --reuse-state --tests-dir tests.d
 
-# Run smokey's own test suite
+# Run smokey's own self-tests (wrapper calls the checked-out repo runner)
 cd smokey
-./smokey --tests-dir tests.d
+smokey --tests-dir tests.d
+
+# Run the underlying repo-pinned suite directly
+smokey --tests-dir selftests.d
 ```
 
 Source `enter.sh` at the repo root (`. ./enter.sh`) to automatically add `smokey/` to your `PATH`, then call `smokey` without specifying the full path.
+
+`tests.d/` is intentionally a tiny wrapper that shells out to the checked-out repo runner and runs the real self-test suite under `selftests.d/`. This keeps the project testable even when the globally installed `smokey` is older than the repo version.
 
 ## Test directory layout
 - Place numbered scripts or directories under `tests.d/`. Example:
@@ -52,6 +57,7 @@ Each test executes inside a subshell with the following read-only exports:
 - `SMOKEY_SKIP_CODE` — exit code (default `20`) that signals Smokey to skip the remaining regular tests (teardown still runs).
 - `SMOKEY_STATE_DIR` — per-run scratch directory (Smokey creates a fresh, random directory under `tests.d/.smokey-state/` for each invocation). Use this if your tests need to share temporary files so nested Smokey calls do not trample each other.
 - `SMOKEY_STATE_PARENT` — parent directory that contains all run-specific state directories.
+- `SMOKEY_ENV_FILE` — shared shell snippet sourced before every test. Use `smokey_env_save NAME` to persist a currently exported variable across later tests, `smokey_env_unset NAME` to remove it again, and `smokey_env_show` to print the current file for debugging.
 
 Smokey removes the per-run state directory automatically unless `--preserve` is passed, so debugging sessions can keep artifacts by reusing that flag.
 
@@ -67,7 +73,7 @@ See `vaultline/tests.d/` for a reference suite:
 Run it via:
 ```
 cd vaultline
-../smokey/smokey --tests-dir tests.d
+smokey --tests-dir tests.d
 ```
 
 ## Website & releases
