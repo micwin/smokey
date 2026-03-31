@@ -16,7 +16,7 @@
           <p class="tagline">CLI · smoke tests · automation</p>
           <h1>Smokey keeps your smoke tests honest.</h1>
           <p>
-            A tiny Bash runner that executes numbered suites, snapshots environment variables, and gives you the option to fail fast as soon as something smells wrong.
+            A tiny Bash runner that executes numbered <code>.d</code> suites, snapshots environment variables, and contains Bash edge cases such as exit traps.
             No YAML, no daemons — just boring, predictable smoke tests that work on any CI runner or developer laptop.
           </p>
           <div class="hero-actions">
@@ -26,7 +26,7 @@
           </div>
         </div>
         <div class="card code-block">
-          <pre><code>$ ./smokey
+          <pre><code>$ smokey
 >> running tests.d/000-setup/run.sh
 >> running tests.d/010-api-health.sh
 !! api-health failed (timeout)
@@ -40,7 +40,7 @@ tests: 1/2 · failures:
     <section>
       <div class="container">
         <p class="tagline">Why Smokey</p>
-        <h2 class="section-title">Modern smoke tests without a full test framework.</h2>
+        <h2 class="section-title">Modern smoke tests without a full test framework. One script to rule them all.</h2>
         <div class="card-grid">
           <article class="card">
             <h3>Deterministic order</h3>
@@ -48,10 +48,10 @@ tests: 1/2 · failures:
           </article>
           <article class="card">
             <h3>Setup &amp; teardown built in</h3>
-            <p>`000-*` can short-circuit the suite with <code>SMOKEY_SKIP_CODE</code>, <code>999-* </code> always run pre/post to clean stragglers.</p>
+            <p><code>999-*</code> scripts always run before and after the suite to clean up leftovers.</p>
           </article>
           <article class="card">
-            <h3>Nested &amp; isolated</h3>
+            <h3>Isolated</h3>
             <p>Every invocation gets a random <code>SMOKEY_STATE_DIR</code>, so nested suites never clobber each other’s temp files.</p>
           </article>
           <article class="card">
@@ -65,17 +65,32 @@ tests: 1/2 · failures:
     <section>
       <div class="container">
         <p class="tagline">Workflow</p>
-        <h2 class="section-title">Three commands to wire up reliable smoke tests.</h2>
+        <h2 class="section-title">Set up a <code>tests.d</code> directory</h2>
         <div class="steps">
           <div class="step">
             <span>01</span>
             <h3>Describe the suite</h3>
-            <p>Create `tests.d/` with numbered scripts or directories. Each entry gets `SMOKEY_TEST_ROOT`, `SMOKEY_TEST_SCRIPT`, and optional `SMOKEY_TEST_DIR`.</p>
+            <p>Create a <code>tests.d/</code> directory in your project root.</p>
+            <p>Add a setup script such as <code>000-fixture.sh</code> and make it executable.</p>
+            <p>Then add numbered checks such as <code>010-check-binaries.sh</code> or <code>020-check-network.sh</code>.</p>
+            <p>Finally create <code>999-cleanup.sh</code> for cleanup steps like removing files or shutting down daemons.</p>
           </div>
           <div class="step">
             <span>02</span>
-            <h3>Run locally &amp; in CI</h3>
-            <p>Execute `./smokey --tests-dir tests.d` anywhere. Pass `--fail-fast`, `--preserve`, or `--reuse-state` when debugging flakes.</p>
+            <h3>Run locally</h3>
+            <div class="card code-block">
+          <pre><code>$ cd myproject
+$ smokey
+>> running tests.d/000-setup/run.sh
+>> running tests.d/010-api-health.sh
+!! api-health failed (timeout)
+--- smokey summary ---
+tests: 1/2 · failures:
+  failed        tests.d/010-api-health.sh</code></pre>
+        </div>
+
+            <p>Change into your project directory and run <code>smokey</code>.</p>
+            <p>Use <code>smokey --tests-dir tests.d</code> when the suite lives somewhere else. Pass <code>--fail-fast</code>, <code>--preserve</code>, or <code>--reuse-state</code> when debugging flakes.</p>
           </div>
           <div class="step">
             <span>03</span>
