@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SMOKEY_VERSION="0.1.10"
+SMOKEY_VERSION="0.1.11"
 
 print_header() {
   echo "smokey ${SMOKEY_VERSION}"
