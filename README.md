@@ -63,6 +63,11 @@ Smokey removes the per-run state directory automatically unless `--preserve` is 
 
 Smokey automatically runs any `999-*` entries once before the suite (unless `--reuse-state` is passed) to clean stale state, and again at the end unless `--preserve` is set. Tests can additionally create their own state files (e.g., `.testrun/`) and share metadata via environment files, as demonstrated by `vaultline/tests.d/`.
 
+## Release 0.2.0
+- Hardened the runner by executing every test in a separate `env -i bash` subprocess and only allowing predeclared environment variables to persist across tests.
+- Regenerate helper and loader scripts per test so malicious suites cannot tamper with later runs.
+- Added path, zombie, and state-directory havoc suites (plus supporting fixtures) to continuously verify that Smokey cleans up PATH poisoning, background jobs, and deleted env files.
+
 ## Example
 See `vaultline/tests.d/` for a reference suite:
 - `000-setup/run.sh` boots the vaultline daemon and writes connection details to `.testrun/env`.
