@@ -82,8 +82,9 @@ smokey --tests-dir tests.d
 ```
 
 ## Website & releases
-- Edit the marketing site under `site-src/` (placeholders such as `{{VERSION}}` are replaced automatically), then run `./build-site.sh` to regenerate the static assets in `site/`.
-- `./package-deb.sh` bumps `SMOKEY_VERSION`, rebuilds the site, and creates `dist/smokey_<version>_amd64.deb`.
+- Edit the marketing site under `site-src/` (placeholders such as `{{VERSION}}` are replaced automatically), then run `scripts/build-site.sh` to regenerate the static assets in `site/`.
+- `scripts/package-deb.sh` bumps `SMOKEY_VERSION`, rebuilds the site, and creates `dist/smokey_<version>_amd64.deb`.
+- `scripts/release.sh` checks out the `release` branch, syncs it with `develop`, and pushes it so the GitHub Actions release workflow publishes the new version (artifacts + Pages site).
 - Pushing the `release` branch triggers the automated GitHub Actions workflow:
   1. determine the version from `smokey`
   2. run `package-deb.sh` and package the `.deb`

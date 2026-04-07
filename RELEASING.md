@@ -5,17 +5,19 @@ This repository keeps all day-to-day development on `develop`. The `release` bra
 ## 1. Verify develop
 - Ensure all desired changes are merged into `develop`.
 - Optionally run the smokey self-tests locally: `cd smokey && ./smokey --tests-dir tests.d`.
-- If you changed the marketing site, regenerate the static output via `./build-site.sh`. (The GitHub workflow does this again, but running it locally helps catch mistakes.)
+- If you changed the marketing site, regenerate the static output via `scripts/build-site.sh`. (The GitHub workflow does this again, but running it locally helps catch mistakes.)
 
 ## 2. Merge develop into release
 - If `release` does not exist yet, create it from develop: `git checkout -b release develop` and push it once.
 - Otherwise: `git checkout release && git pull && git merge develop`.
 
 ## 3. Push release
-- `git push origin release`
-- GitHub Actions runs `.github/workflows/release.yml` with these steps:
+- Run `scripts/release.sh`. The script:
+  1. Verifies you are on `develop` with a clean working tree.
+  2. Checks out (or creates) the `release` branch, updates it with `develop`, and pushes it to origin.
+- Once `scripts/release.sh` pushes `release`, GitHub Actions runs `.github/workflows/release.yml`:
   1. Read `SMOKEY_VERSION` from `smokey`.
-  2. Execute `./package-deb.sh` (which bumps versions if needed, rebuilds the marketing site, and outputs `dist/smokey_<version>_amd64.deb` plus `dist/smokey_<version>.sh`).
+  2. Execute `scripts/package-deb.sh` (which bumps versions if needed, rebuilds the marketing site, and outputs `dist/smokey_<version>_amd64.deb` plus `dist/smokey_<version>.sh`).
   3. Create/push tag `v<version>`.
   4. Publish a GitHub Release with both artifacts attached.
   5. Deploy the generated `site/` folder to the `pages` branch for GitHub Pages.
@@ -31,6 +33,6 @@ This repository keeps all day-to-day development on `develop`. The `release` bra
 - Otherwise, leave it in place; the next release just reuses it.
 
 ## Notes
-- `package-deb.sh` is idempotent — it only bumps `SMOKEY_VERSION` when you pass a higher version number. By default it increments the patch number.
+- `scripts/package-deb.sh` is idempotent — it only bumps `SMOKEY_VERSION` when you pass a higher version number. By default it increments the patch number.
 - The workflow uses the default `GITHUB_TOKEN` with `contents: write` permission; no extra secrets are required.
 - If you ever need to re-run a release (e.g., because an asset was missing), rerun the workflow from the Actions tab (“Re-run all jobs”) **after fixing the issue** on `release`.
