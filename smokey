@@ -104,10 +104,12 @@ export SMOKEY_STATE_PARENT="${STATE_PARENT}"
 SMOKEY_ENV_FILE="${SMOKEY_STATE_DIR}/shared.env"
 SMOKEY_HELPERS_FILE="${SMOKEY_STATE_DIR}/smokey-helpers.sh"
 SMOKEY_ENV_LOADER="${SMOKEY_STATE_DIR}/smokey-bash-env.sh"
+SMOKEY_ENV_BEFORE_FILE="${SMOKEY_STATE_DIR}/shared.env.before"
 export SMOKEY_ENV_FILE
 export SMOKEY_HELPERS_FILE
 export SMOKEY_ENV_LOADER
 : > "${SMOKEY_ENV_FILE}"
+: > "${SMOKEY_ENV_BEFORE_FILE}"
 cat > "${SMOKEY_HELPERS_FILE}" <<'EOF'
 smokey_env__validate_name() {
   [[ "$1" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]
@@ -162,6 +164,55 @@ source "${SMOKEY_HELPERS_FILE}"
 # shellcheck disable=SC1090
 source "${SMOKEY_ENV_FILE}"
 EOF
+
+smokey_env_name_from_line() {
+  local line="$1"
+  if [[ "${line}" =~ ^export[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)= ]]; then
+    printf '%s' "${BASH_REMATCH[1]}"
+    return 0
+  fi
+  if [[ "${line}" =~ ^unset[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)$ ]]; then
+    printf '%s' "${BASH_REMATCH[1]}"
+    return 0
+  fi
+  return 1
+}
+
+smokey_env_snapshot() {
+  cp "${SMOKEY_ENV_FILE}" "${SMOKEY_ENV_BEFORE_FILE}"
+}
+
+smokey_env_restore() {
+  local before_file="${SMOKEY_ENV_BEFORE_FILE}"
+  local new_file="${SMOKEY_ENV_FILE}"
+  local tmp_file
+  tmp_file="$(mktemp "${SMOKEY_STATE_DIR}/env.restore.XXXX")"
+
+  declare -A SMOKEY_ENV_NEW_LINES=()
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    local name
+    if name=$(smokey_env_name_from_line "${line}"); then
+      SMOKEY_ENV_NEW_LINES["${name}"]="${line}"
+    fi
+  done < "${new_file}"
+
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    local name
+    if name=$(smokey_env_name_from_line "${line}"); then
+      if [[ -n "${SMOKEY_ENV_NEW_LINES[${name}]+set}" ]]; then
+        printf '%s\n' "${SMOKEY_ENV_NEW_LINES[${name}]}" >> "${tmp_file}"
+        unset "SMOKEY_ENV_NEW_LINES[${name}]"
+      else
+        printf '%s\n' "${line}" >> "${tmp_file}"
+      fi
+    else
+      printf '%s\n' "${line}" >> "${tmp_file}"
+    fi
+  done < "${before_file}"
+
+  mv "${tmp_file}" "${SMOKEY_ENV_FILE}"
+  : > "${SMOKEY_ENV_BEFORE_FILE}"
+}
 
 cleanup_state_dir() {
   if [[ "${PRESERVE}" == "true" ]]; then
@@ -266,6 +317,7 @@ run_entry() {
     return 1
   fi
 
+  smokey_env_snapshot
   set +e
   env -i bash -c '
     set -euo pipefail
@@ -305,6 +357,7 @@ run_entry() {
     "${ENTRY_TEST_DIR}"
   status=$?
   set -e
+  smokey_env_restore
 
   if [[ "${record}" == "true" ]]; then
     if [[ ${status} -eq ${SMOKEY_SKIP_CODE} ]]; then
