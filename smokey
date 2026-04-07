@@ -89,6 +89,8 @@ if [[ ! -d "${TESTS_DIR}" ]]; then
 fi
 
 TEST_ROOT="$(cd "${TESTS_DIR}" && pwd)"
+SMOKEY_ENV_BASE="$(export -p)"
+readonly SMOKEY_ENV_BASE
 export SMOKEY_TEST_ROOT="${TEST_ROOT}"
 export SMOKEY_SKIP_CODE=20
 
@@ -176,6 +178,8 @@ filtered_entries=()
 for entry in "${entries[@]}"; do
   base="$(basename "${entry}")"
   [[ "${base}" == ".smokey-state" ]] && continue
+  [[ "${base}" == "assets" ]] && continue
+  [[ "${base}" =~ ^[0-9]{3}- ]] || continue
   filtered_entries+=("${entry}")
 done
 
@@ -264,7 +268,15 @@ run_entry() {
 
   set +e
   (
+    eval "${SMOKEY_ENV_BASE}"
     set -euo pipefail
+    export SMOKEY_TEST_ROOT="${SMOKEY_TEST_ROOT}"
+    export SMOKEY_SKIP_CODE
+    export SMOKEY_STATE_DIR
+    export SMOKEY_STATE_PARENT
+    export SMOKEY_ENV_FILE
+    export SMOKEY_HELPERS_FILE
+    export SMOKEY_ENV_LOADER
     export SMOKEY_TEST_SCRIPT="${ENTRY_TARGET}"
     export BASH_ENV="${SMOKEY_ENV_LOADER}"
     if [[ -n "${ENTRY_TEST_DIR}" ]]; then
@@ -344,20 +356,24 @@ fi
 if [[ "${SKIP_REST}" == "false" ]]; then
   for entry in "${regular_entries[@]}"; do
     if [[ "${SKIP_REST}" == "true" ]]; then
-      run_entry "${entry}" "regular" "${SKIP_REASON:-setup}"
+      run_entry "${entry}" "regular" "${SKIP_REASON:-setup}" || true
       continue
     fi
-    run_entry "${entry}" "regular" ""
+    run_entry "${entry}" "regular" "" || true
+  done
+else
+  for entry in "${regular_entries[@]}"; do
+    run_entry "${entry}" "regular" "${SKIP_REASON:-setup}" || true
   done
 fi
 
 if [[ "${PRESERVE}" == "false" ]]; then
   for teardown_entry in "${teardown_entries[@]}"; do
-    run_entry "${teardown_entry}" "teardown" ""
+    run_entry "${teardown_entry}" "teardown" "" || true
   done
 else
   for teardown_entry in "${teardown_entries[@]}"; do
-    run_entry "${teardown_entry}" "teardown" "preserve"
+    run_entry "${teardown_entry}" "teardown" "preserve" || true
   done
 fi
 

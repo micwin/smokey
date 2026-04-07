@@ -6,10 +6,3 @@ case "$(basename "${TEST_ROOT}")" in
   tests.d) ;;
   *) TEST_ROOT="$(cd "${TEST_ROOT}/.." && pwd)" ;;
 esac
-: "${SMOKEY_STATE_DIR:?SMOKEY_STATE_DIR is required}"
-STATE_FILE="${SMOKEY_STATE_DIR}/smoke-suite-dir"
-if [[ -f "${STATE_FILE}" ]]; then
-  TMP_DIR="$(cat "${STATE_FILE}")"
-  rm -rf "${TMP_DIR}"
-  rm -f "${STATE_FILE}"
-fi

@@ -33,12 +33,12 @@ cd smokey
 smokey --tests-dir tests.d
 
 # Run the underlying repo-pinned suite directly
-smokey --tests-dir selftests.d
+smokey --tests-dir tests.d
 ```
 
 Source `enter.sh` at the repo root (`. ./enter.sh`) to automatically add `smokey/` to your `PATH`, then call `smokey` without specifying the full path.
 
-`tests.d/` is intentionally a tiny wrapper that shells out to the checked-out repo runner and runs the real self-test suite under `selftests.d/`. This keeps the project testable even when the globally installed `smokey` is older than the repo version.
+`tests.d/` now contains the entire suite (setup, feature tests, teardown). Some entries spin up nested Smokey runs in temporary subdirectories, mirroring how downstream projects might orchestrate their own suites.
 
 ## Test directory layout
 - Place numbered scripts or directories under `tests.d/`. Example:
