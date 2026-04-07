@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DIST_DIR="${ROOT_DIR}/dist"
 DIST_DIR="${ROOT_DIR}/dist"
 PKG_DIR="${DIST_DIR}/smokey-deb"
 ARCH="amd64"
@@ -31,7 +32,7 @@ if [[ "${NEW_VERSION}" != "${CURRENT_VERSION}" ]]; then
   sed -i "s/SMOKEY_VERSION=\"${CURRENT_VERSION}\"/SMOKEY_VERSION=\"${NEW_VERSION}\"/" "${ROOT_DIR}/smokey"
 fi
 
-"${ROOT_DIR}/build-site.sh"
+"${ROOT_DIR}/scripts/build-site.sh"
 
 rm -rf "${PKG_DIR}"
 mkdir -p "${PKG_DIR}/DEBIAN" "${PKG_DIR}/usr/local/bin" "${PKG_DIR}/usr/share/doc/smokey"
