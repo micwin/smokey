@@ -102,15 +102,15 @@ mkdir -p "${SMOKEY_STATE_DIR}"
 export SMOKEY_STATE_DIR
 export SMOKEY_STATE_PARENT="${STATE_PARENT}"
 SMOKEY_ENV_FILE="${SMOKEY_STATE_DIR}/shared.env"
-SMOKEY_HELPERS_FILE="${SMOKEY_STATE_DIR}/smokey-helpers.sh"
-SMOKEY_ENV_LOADER="${SMOKEY_STATE_DIR}/smokey-bash-env.sh"
 SMOKEY_ENV_BEFORE_FILE="${SMOKEY_STATE_DIR}/shared.env.before"
 export SMOKEY_ENV_FILE
-export SMOKEY_HELPERS_FILE
-export SMOKEY_ENV_LOADER
 : > "${SMOKEY_ENV_FILE}"
+printf 'export SMOKEY_SHARED_TOKEN=\n' >> "${SMOKEY_ENV_FILE}"
 : > "${SMOKEY_ENV_BEFORE_FILE}"
-cat > "${SMOKEY_HELPERS_FILE}" <<'EOF'
+
+smokey_write_helpers() {
+  local target="$1"
+  cat > "${target}" <<'EOF'
 smokey_env__validate_name() {
   [[ "$1" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]
 }
@@ -158,12 +158,17 @@ smokey_env_show() {
   cat "${SMOKEY_ENV_FILE}"
 }
 EOF
-cat > "${SMOKEY_ENV_LOADER}" <<'EOF'
+}
+
+smokey_write_loader() {
+  local target="$1"
+  cat > "${target}" <<'EOF'
 # shellcheck disable=SC1090
 source "${SMOKEY_HELPERS_FILE}"
 # shellcheck disable=SC1090
 source "${SMOKEY_ENV_FILE}"
 EOF
+}
 
 smokey_env_name_from_line() {
   local line="$1"
@@ -317,6 +322,13 @@ run_entry() {
     return 1
   fi
 
+  local helper_dir
+  helper_dir="$(mktemp -d "${SMOKEY_STATE_DIR}/helpers.XXXX")"
+  SMOKEY_HELPERS_FILE="${helper_dir}/helpers.sh"
+  SMOKEY_ENV_LOADER="${helper_dir}/loader.sh"
+  smokey_write_helpers "${SMOKEY_HELPERS_FILE}"
+  smokey_write_loader "${SMOKEY_ENV_LOADER}"
+
   smokey_env_snapshot
   set +e
   env -i bash -c '
@@ -358,6 +370,7 @@ run_entry() {
   status=$?
   set -e
   smokey_env_restore
+  rm -rf "${helper_dir}"
 
   if [[ "${record}" == "true" ]]; then
     if [[ ${status} -eq ${SMOKEY_SKIP_CODE} ]]; then
