@@ -34,7 +34,7 @@ jobs:
           echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
 
       - name: Build package and site
-        run: ./package-deb.sh "${{ steps.vars.outputs.version }}"
+        run: scripts/package-deb.sh "${{ steps.vars.outputs.version }}"
 
       - name: Create git tag
         env:
