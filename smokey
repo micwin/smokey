@@ -267,26 +267,42 @@ run_entry() {
   fi
 
   set +e
-  (
-    eval "${SMOKEY_ENV_BASE}"
+  env -i bash -c '
     set -euo pipefail
-    export SMOKEY_TEST_ROOT="${SMOKEY_TEST_ROOT}"
-    export SMOKEY_SKIP_CODE
-    export SMOKEY_STATE_DIR
-    export SMOKEY_STATE_PARENT
-    export SMOKEY_ENV_FILE
-    export SMOKEY_HELPERS_FILE
-    export SMOKEY_ENV_LOADER
-    export SMOKEY_TEST_SCRIPT="${ENTRY_TARGET}"
-    export BASH_ENV="${SMOKEY_ENV_LOADER}"
-    if [[ -n "${ENTRY_TEST_DIR}" ]]; then
-      export SMOKEY_TEST_DIR="${ENTRY_TEST_DIR}"
+    env_snapshot="$1"; shift
+    eval "$env_snapshot"
+
+    export SMOKEY_TEST_ROOT="$1"; shift
+    export SMOKEY_SKIP_CODE="$1"; shift
+    export SMOKEY_STATE_DIR="$1"; shift
+    export SMOKEY_STATE_PARENT="$1"; shift
+    export SMOKEY_ENV_FILE="$1"; shift
+    export SMOKEY_HELPERS_FILE="$1"; shift
+    export SMOKEY_ENV_LOADER="$1"; shift
+    export SMOKEY_TEST_SCRIPT="$1"; shift
+    export BASH_ENV="$1"; shift
+    test_dir="$1"; shift
+
+    if [[ -n "$test_dir" ]]; then
+      export SMOKEY_TEST_DIR="$test_dir"
     else
       unset -v SMOKEY_TEST_DIR || true
     fi
+
     echo ">> running ${SMOKEY_TEST_SCRIPT}"
-    "${SMOKEY_TEST_SCRIPT}"
-  )
+    exec "${SMOKEY_TEST_SCRIPT}"
+  ' -- \
+    "${SMOKEY_ENV_BASE}" \
+    "${SMOKEY_TEST_ROOT}" \
+    "${SMOKEY_SKIP_CODE}" \
+    "${SMOKEY_STATE_DIR}" \
+    "${SMOKEY_STATE_PARENT}" \
+    "${SMOKEY_ENV_FILE}" \
+    "${SMOKEY_HELPERS_FILE}" \
+    "${SMOKEY_ENV_LOADER}" \
+    "${ENTRY_TARGET}" \
+    "${SMOKEY_ENV_LOADER}" \
+    "${ENTRY_TEST_DIR}"
   status=$?
   set -e
 
