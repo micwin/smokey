@@ -108,6 +108,10 @@ export SMOKEY_ENV_BEFORE_FILE
 : > "${SMOKEY_ENV_FILE}"
 printf 'export SMOKEY_SHARED_TOKEN=\n' >> "${SMOKEY_ENV_FILE}"
 : > "${SMOKEY_ENV_BEFORE_FILE}"
+SMOKEY_ENV_PRESEED="${SMOKEY_TEST_ROOT}/env.preseed"
+if [[ -f "${SMOKEY_ENV_PRESEED}" ]]; then
+  cat "${SMOKEY_ENV_PRESEED}" >> "${SMOKEY_ENV_FILE}"
+fi
 
 smokey_write_helpers() {
   local target="$1"

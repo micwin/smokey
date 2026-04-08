@@ -61,6 +61,62 @@ Each test executes inside a subshell with the following read-only exports:
 
 Smokey removes the per-run state directory automatically unless `--preserve` is passed, so debugging sessions can keep artifacts by reusing that flag.
 
+### Sharing env values using `$SMOKEY_ENV_FILE`
+
+Smokey automatically sources `${SMOKEY_ENV_FILE}` before each test. You never touch the file directly; instead call the helpers that Smokey injects into every test environment:
+
+```bash
+# 000-setup/run.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+API_TOKEN="$(vault issue-token)"
+export API_TOKEN
+smokey_env_save API_TOKEN   # persists the export into shared.env
+
+TMPDIR="${SMOKEY_STATE_DIR}/daemon"
+mkdir -p "$TMPDIR"
+smokey_env_save TMPDIR
+```
+
+```bash
+# 010-smoke.sh (later test)
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${API_TOKEN:?API token missing}"
+curl -H "Authorization: Bearer ${API_TOKEN}" \
+     --unix-socket "${TMPDIR}/sock" \
+     http://unix/health
+
+# stop sharing once you no longer need it
+smokey_env_unset API_TOKEN
+```
+
+- `smokey_env_save NAME` writes the current value of `$NAME` into the shared file so the next test sees the same export.
+- `smokey_env_unset NAME` both unsets the variable for the current shell **and** records the removal for later tests.
+- `smokey_env_show` dumps the current file (useful while debugging).
+
+The shared env file lives under `tests.d/.smokey-state/<run-id>/shared.env`. Smokey creates and cleans it automatically—teardown scripts should never delete `${SMOKEY_STATE_DIR}` (unless you intentionally pass `--preserve` to keep state around).
+
+#### Pre-seeding the shared env
+
+Smokey automatically appends `tests.d/env.preseed` to the shared env file before the first test runs. Keep that file under version control with the exports/unsets you want available everywhere:
+
+```bash
+# tests.d/env.preseed
+export TMPDIR="${SMOKEY_STATE_DIR}/daemon"
+mkdir -p "${TMPDIR}"
+export LOG_LEVEL=debug
+export API_BASE_URL="https://api.example.test"
+unset LEGACY_FLAG
+```
+
+- Always include `export` (or `unset`) so later tests inherit the values when `SMOKEY_ENV_FILE` is sourced; plain assignments stay local to that test shell.
+- Smokey-defined variables such as `SMOKEY_STATE_DIR` and `SMOKEY_TEST_ROOT` are already available when the preseed file runs, so you can reference them directly to derive directories.
+
+Each test sees those defaults immediately, and you can still call `smokey_env_save` / `smokey_env_unset` later to record dynamic values. No extra scripting is required—the convention file is picked up automatically during every run.
+
 Smokey automatically runs any `999-*` entries once before the suite (unless `--reuse-state` is passed) to clean stale state, and again at the end unless `--preserve` is set. Tests can additionally create their own state files (e.g., `.testrun/`) and share metadata via environment files, as demonstrated by `vaultline/tests.d/`.
 
 ## Release 0.2.0
