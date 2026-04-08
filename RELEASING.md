@@ -7,11 +7,14 @@ This repository keeps all day-to-day development on `develop`. The `release` bra
 - Optionally run the smokey self-tests locally: `cd smokey && ./smokey --tests-dir tests.d`.
 - If you changed the marketing site, regenerate the static output via `scripts/build-site.sh`. (The GitHub workflow does this again, but running it locally helps catch mistakes.)
 
-## 2. Merge develop into release
+## 2. Prepare version bump
+- Run `scripts/package-deb.sh` before touching `release`. Without arguments it automatically bumps the patch version (e.g., `0.2.0` → `0.2.1`), rebuilds the site, and drops fresh artifacts into `dist/`. Pass an explicit version (e.g., `./scripts/package-deb.sh 0.3.0`) when you want a minor/major release. Commit the resulting `smokey` change.
+
+## 3. Merge develop into release
 - If `release` does not exist yet, create it from develop: `git checkout -b release develop` and push it once.
 - Otherwise: `git checkout release && git pull && git merge develop`.
 
-## 3. Push release
+## 4. Push release
 - Run `scripts/release.sh`. The script:
   1. Verifies you are on `develop` with a clean working tree.
   2. Checks out (or creates) the `release` branch, updates it with `develop`, and pushes it to origin.
@@ -22,13 +25,13 @@ This repository keeps all day-to-day development on `develop`. The `release` bra
   4. Publish a GitHub Release with both artifacts attached.
   5. Deploy the generated `site/` folder to the `pages` branch for GitHub Pages.
 
-## 4. Monitor the workflow
+## 5. Monitor the workflow
 - Check the Actions tab for the `Release Smokey` workflow run. It should finish successfully.
 - After success:
   * The GitHub release contains the `.deb` and the raw `smokey` script.
   * https://micwin.github.io/smokey/ shows the updated site (with the new version in download links).
 
-## 5. Optional cleanup
+## 6. Optional cleanup
 - If you like keeping `release` short-lived, delete it locally/remote: `git checkout develop && git branch -D release && git push origin --delete release`.
 - Otherwise, leave it in place; the next release just reuses it.
 
