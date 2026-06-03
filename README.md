@@ -10,6 +10,7 @@ Smokey is a lightweight smoke-test runner for mono-repo projects. It expects a d
 - Summarizes results at the end, listing only non-OK outcomes to keep logs concise.
 - Debug-friendly flags: `--fail-fast` interrupts the suite after the first failure (teardown still runs) and `--preserve` skips the final teardown pass so you can inspect artifacts. `--reuse-state` skips the initial cleanup pass if you deliberately keep a previous `.testrun/`.
 - Provides an isolated scratch directory per run (`SMOKEY_STATE_DIR`) so nested Smokey invocations never overwrite each other’s temporary files.
+- Agent-friendly guidance is bundled into the executable: run `smokey agents-help` for the suite contract, debugging boundaries, state rules, and test readability conventions.
 
 ## Usage
 ```
@@ -119,7 +120,9 @@ Each test sees those defaults immediately, and you can still call `smokey_env_sa
 
 Smokey automatically runs any `999-*` entries once before the suite (unless `--reuse-state` is passed) to clean stale state, and again at the end unless `--preserve` is set. Tests can additionally create their own state files (e.g., `.testrun/`) and share metadata via environment files, as demonstrated by `vaultline/tests.d/`.
 
-## Release 0.2.0
+## Release 0.2.3
+- Added `smokey agents-help`, a dedicated guide for coding agents and humans who need the suite contract in one place.
+- Documented the expected pattern for defining shared env values at the start of `000-*` setup entries via `export` plus `smokey_env_save`.
 - Hardened the runner by executing every test in a separate `env -i bash` subprocess and only allowing predeclared environment variables to persist across tests.
 - Regenerate helper and loader scripts per test so malicious suites cannot tamper with later runs.
 - Added path, zombie, and state-directory havoc suites (plus supporting fixtures) to continuously verify that Smokey cleans up PATH poisoning, background jobs, and deleted env files.

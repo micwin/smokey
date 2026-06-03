@@ -54,6 +54,14 @@ Do not add direct-test-only fallback code just to make a test script runnable by
 
 Smokey sources `${SMOKEY_ENV_FILE}` before each test. Do not edit that file directly.
 
+Set values needed by later tests near the beginning of `000-*` setup entries. Export each value first, then persist it with `smokey_env_save`:
+
+```bash
+# tests.d/000-setup/run.sh
+export API_URL="http://127.0.0.1:8080"
+smokey_env_save API_URL
+```
+
 Use the helpers injected into each test:
 
 ```bash
