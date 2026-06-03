@@ -52,6 +52,7 @@ jobs:
         with:
           tag_name: v${{ steps.vars.outputs.version }}
           name: Smokey v${{ steps.vars.outputs.version }}
+          body_path: CHANGELOG.md
           files: |
             dist/smokey_${{ steps.vars.outputs.version }}_amd64.deb
             dist/smokey_${{ steps.vars.outputs.version }}

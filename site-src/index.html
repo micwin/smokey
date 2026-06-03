@@ -127,6 +127,9 @@ tests: 1/2 · failures:
             Observability baked in — the summary only lists failures and skip reasons, making CI logs skimmable.
           </div>
           <div class="feature">
+            Agent-aware help — run <code>smokey agents-help</code> for a compact contract that keeps AI agents on the full suite path.
+          </div>
+          <div class="feature">
             Bring-your-own tools — run `go test`, `docker compose`, Ansible, curl… anything you can script is fair game.
           </div>
           <div class="feature">
@@ -156,7 +159,10 @@ git clone git@github.com:micwin/smokey.git
 cd smokey && smokey
 
 # override tests directory only when needed
-smokey --tests-dir ./infra/tests.d --fail-fast</code></pre>
+smokey --tests-dir ./infra/tests.d --fail-fast
+
+# print the agent-facing suite contract
+smokey agents-help</code></pre>
         </div>
         <div class="hero-actions hero-actions-centered" style="margin-top:1rem;">
           <a class="btn btn-primary" href="https://github.com/micwin/smokey/releases/download/v{{VERSION}}/smokey_{{VERSION}}_amd64.deb">Download .deb</a>
